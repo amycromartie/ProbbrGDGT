@@ -26,6 +26,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
+import csv
 import os
 
 # -------------------
@@ -33,14 +34,15 @@ import os
 # -------------------
 # ⚙️ Set this base directory where your input/output files are stored
 # For mac this can be easily modified with / 
-BASE_DIR = r"C:\Users\Username\Documents\Ggdtarticle\ProbGDGTs"
+BASE_DIR = r"C:\Users\Username\Documents\ProbGDGTs"
 
 # ⚙️ Input file names (must exist in BASE_DIR)
 GDGT_FILE = "ProbGDGT_SMOTE_DB.csv"
 CORES_FILE = "Roblesetal2022_ExampleCore_Vanevan.csv"
 
 # ⚙️ Output directory for results (can be same or different)
-OUTPUT_DIR = r"C:\Users\Username\Documents\Ggdtarticle\ProbGDGTs\Output"
+OUTPUT_DIR = r"C:\Users\Username\Documents\ProbGDGTs\Output"
+
 
 # ⚙️ Output filenames
 OUTPUT_CSV = "RF_Probabilities_With_CI.csv"
@@ -53,8 +55,20 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # -------------------
 # Load Data
 # -------------------
-GDGT_SMOTE = pd.read_csv(os.path.join(BASE_DIR, GDGT_FILE), delimiter=',')
-cores = pd.read_csv(os.path.join(BASE_DIR, CORES_FILE), delimiter=';')
+
+def smart_read_csv(path):
+    with open(path, "r", encoding="utf-8") as f:
+        sample = f.read(2048)
+        try:
+            dialect = csv.Sniffer().sniff(sample)
+            sep = dialect.delimiter
+        except csv.Error:
+            sep = ","  # fallback if detection fails
+    return pd.read_csv(path, sep=sep, engine="python")
+
+cores = smart_read_csv(os.path.join(BASE_DIR, CORES_FILE))
+GDGT_SMOTE = smart_read_csv(os.path.join(BASE_DIR, GDGT_FILE))
+
 
 # -------------------
 # Setup
